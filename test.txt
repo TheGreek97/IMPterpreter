@@ -1,0 +1,3 @@
+parse program [] "a = 3; b = a; c = 7-2; condition = true; if (condition || False){ a = b+c;} else {a = b-c;}"
+
+parse program [] "if (true || false){a = 5;} else {b=3;}"
