@@ -40,9 +40,9 @@ bfactor =
     <|>
     symbol "false"
     <|> 
-    identifier
-    <|> 
     bcomparison
+    <|>
+    identifier
 
 bcomparison :: Parser String
 bcomparison = 

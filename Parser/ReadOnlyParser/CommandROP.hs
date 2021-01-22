@@ -61,12 +61,16 @@ ifThenElse =
 
 while :: Parser String
 while =
-    do 
-        symbol "while"
-        symbol "("
-        b <- bexp
-        symbol ")"
-        symbol "{"
-        x <- program
-        symbol "}"
-        return ("while (" ++ b ++ ") {" ++ x ++ "}")
+    do {
+        symbol "while";
+        symbol "(";
+        b <- bexp;
+        symbol ")";
+        symbol "{";
+        x <- program;
+        symbol "}";
+        return ("while (" ++ b ++ ") {" ++ x ++ "}");
+    }
+
+repeatWhileString :: String -> Parser String
+repeatWhileString s = P(\env input -> Just (env, "", s ++ input))

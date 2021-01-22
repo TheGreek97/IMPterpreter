@@ -61,22 +61,24 @@ ifThenElse =
         b <- bexp
         symbol ")"
         symbol "{"
-        if b 
-            then do
-                program
-                symbol "}"
-                do 
-                    symbol "else"
-                    symbol "{"
-                    ROP.program
-                    symbol "}"
-                    return ""
+        if b
+            then do {
+                program;
+                symbol "}";
+                do {
+                    symbol "else";
+                    symbol "{";
+                    ROP.program;
+                    symbol "}";
+                    return "";
+                } 
                 <|>
                 return ""
+            }
         else 
-            do
-            ROP.program
-            symbol "}"
+            do {
+            ROP.program;
+            symbol "}";
             do
                 symbol "else"
                 symbol "{"
@@ -85,22 +87,29 @@ ifThenElse =
                 return ""
             <|>
             return ""
+        }
 
 while :: Parser String
 while = 
-    do 
-        symbol "while"
-        symbol "("
-        condition <- bexp
-        symbol ")"
-        symbol "{"
-        if condition then
-            do
-            program
-            symbol "}"
-            while
+    do {
+        w <- ROP.while;
+        ROP.repeatWhileString w;
+        symbol "while";
+        symbol "(";
+        condition <- bexp;
+        symbol ")";
+        symbol "{";
+        if condition 
+            then do {
+                program;
+                symbol "}";
+                ROP.repeatWhileString w;
+                while;
+            }
         else
-            do 
-            ROP.program
-            symbol "}"
-            return ""
+            do {
+                ROP.program;
+                symbol "}";
+                return "";
+            }
+    }
