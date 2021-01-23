@@ -6,7 +6,7 @@ where
 data Variable = Variable {
     name :: String,
     vtype :: String,
-    value :: Int 
+    value :: Either Int String 
 } deriving Show
 
 type Env = [Variable]
@@ -18,8 +18,8 @@ modifyEnv (x:xs) newVar = if (name x) == (name newVar)
                         else [x] ++ modifyEnv xs newVar
 
 -- Searches for the value of a variable stored in the Env given the name
-searchVariable :: Env -> String -> [(Int, String)]
-searchVariable []     _         = []
+searchVariable :: Env -> String -> Maybe ((Either Int String), String)
+searchVariable    []       _    = Nothing
 searchVariable (x:xs) queryname = if (name x) == queryname
-    then [(value x, vtype x)]
+    then Just (value x, vtype x)
     else searchVariable xs queryname

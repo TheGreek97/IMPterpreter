@@ -1,6 +1,7 @@
 module Parser.ReadOnlyParser.AexpROP where
 import Control.Applicative
 import Parser.Core
+import qualified Debug.Trace as DBG
 
 aexp :: Parser String
 aexp = 

@@ -4,6 +4,7 @@ import qualified Debug.Trace as DBG
 import Parser.Core
 import Parser.Aexp(aexp)
 import Parser.Bexp(bexp)
+import Parser.Array(arrayExp)
 import Parser.EnvironmentManager(updateEnv)
 import Environment(Variable(..))
 import qualified Parser.ReadOnlyParser.CommandROP as ROP
@@ -35,7 +36,7 @@ assignment =
             aval <- aexp
             --DBG.traceM(show aval)
             symbol ";"
-            updateEnv Variable {name=varName, vtype="int", value = aval}
+            updateEnv Variable {name=varName, vtype="int", value = Left aval}
     <|>
     do
         varName <- identifier
@@ -44,8 +45,24 @@ assignment =
        -- DBG.traceM(show bval)
         symbol ";"
         if bval
-        then updateEnv Variable {name=varName, vtype="bool", value = 0}
-        else updateEnv Variable {name=varName, vtype="bool", value = 1}
+        then updateEnv Variable {name=varName, vtype="bool", value = Left 0}
+        else updateEnv Variable {name=varName, vtype="bool", value = Left 1}
+    <|>
+    do
+        varName <- identifier
+        symbol "="
+        stringVal <- stringExp
+        --DBG.traceM(show stringVal)
+        symbol ";" 
+        updateEnv Variable {name=varName, vtype="string", value = Right stringVal}
+    <|>
+    do
+        varName <- identifier
+        symbol "="
+        arrayString <- arrayExp
+        --DBG.traceM(show arrayVal)
+        symbol ";" 
+        updateEnv Variable {name=varName, vtype="array", value = Right arrayString}
 
 skip :: Parser String
 skip = 

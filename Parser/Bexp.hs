@@ -2,7 +2,7 @@ module Parser.Bexp where
 import Control.Applicative
 import Parser.Core
 import Parser.Aexp(aexp)
-import Parser.EnvironmentManager (readVariable, readVariableType)
+import Parser.EnvironmentManager
 
 bexp :: Parser Bool
 bexp = 
@@ -45,8 +45,10 @@ bterm =
     <|>
     do
         i <- identifier
-        value <- readVariable i
-        return (value == 0) -- If the integer value is != 0 it is consider as False
+        var <- readVariable i
+        case var of
+            Left var -> return (var == 0) -- If the integer value is != 0 it is consider as False
+            Right var -> empty
 
 bcompare :: Parser Bool
 bcompare =

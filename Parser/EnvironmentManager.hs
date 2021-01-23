@@ -1,5 +1,6 @@
 module Parser.EnvironmentManager
 where
+import Text.Read
 import Environment
 import Parser.Core (Parser (..))
 
@@ -12,13 +13,18 @@ updateEnv var = P (\env input -> case input of
                     xs -> Just ((modifyEnv env var), "", xs))
 
 -- Returns the value of a variable given the name
-readVariable :: String -> Parser Int
+readVariable :: String -> Parser (Either Int String)
 readVariable name = P (\env input-> case searchVariable env name of
-    [] -> Nothing
-    [(value, _)] -> Just (env, value, input))
+    Nothing -> Nothing
+    Just (value, _) -> Just (env, value, input))
 
--- Returns the type of a variable given the name
-readVariableType :: String -> Parser (Int, String)
-readVariableType name = P (\env input-> case searchVariable env name of
-    [] -> Nothing
-    [(value, vtype)] -> Just (env, (value, vtype), input))
+readIntVariable :: String -> Parser (Either Int String)
+readIntVariable name = P (\env input-> case searchVariable env name of
+    Nothing -> Nothing
+    Just (value, _) -> Just (env, value, input))
+
+-- Returns the value and the type of a variable given the name
+readFullVariable :: String -> Parser (Either Int String, String)
+readFullVariable name = P (\env input-> case searchVariable env name of
+    Nothing -> Nothing
+    Just (value, vtype) -> Just (env, (value, vtype), input))

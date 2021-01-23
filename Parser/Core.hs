@@ -122,3 +122,14 @@ integer = token int
 
 symbol :: String -> Parser String
 symbol xs = token (string xs)
+
+notTerminator :: Char -> Bool
+notTerminator c = c /= '\''
+
+stringExp :: Parser String
+stringExp = 
+    do
+        symbol "'"
+        stringVal <- many (sat notTerminator)
+        symbol "'"
+        return stringVal
