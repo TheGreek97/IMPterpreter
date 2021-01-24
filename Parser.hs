@@ -6,3 +6,4 @@ import Parser.EnvironmentManager
 import Parser.Aexp
 import Parser.Bexp
 import Parser.Command
+import Parser.Array

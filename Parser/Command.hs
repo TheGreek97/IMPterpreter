@@ -4,10 +4,10 @@ import qualified Debug.Trace as DBG
 import Parser.Core
 import Parser.Aexp(aexp)
 import Parser.Bexp(bexp)
-import Parser.Array(arrayExp)
 import Parser.EnvironmentManager(updateEnv)
 import Environment(Variable(..))
-import qualified Parser.ReadOnlyParser.CommandROP as ROP
+import qualified Parser.ReadOnlyParser.CommandROP as CR
+import qualified Parser.ReadOnlyParser.ArrayROP as AR
 
 program :: Parser String
 program = 
@@ -59,7 +59,7 @@ assignment =
     do
         varName <- identifier
         symbol "="
-        arrayString <- arrayExp
+        arrayString <- AR.arrayExp
         --DBG.traceM(show arrayVal)
         symbol ";" 
         updateEnv Variable {name=varName, vtype="array", value = Right arrayString}
@@ -85,7 +85,7 @@ ifThenElse =
                 do {
                     symbol "else";
                     symbol "{";
-                    ROP.program;
+                    CR.program;
                     symbol "}";
                     return "";
                 } 
@@ -94,7 +94,7 @@ ifThenElse =
             }
         else 
             do {
-            ROP.program;
+            CR.program;
             symbol "}";
             do
                 symbol "else"
@@ -109,8 +109,8 @@ ifThenElse =
 while :: Parser String
 while = 
     do {
-        w <- ROP.while;
-        ROP.repeatWhileString w;
+        w <- CR.while;
+        CR.repeatWhileString w;
         symbol "while";
         symbol "(";
         condition <- bexp;
@@ -120,12 +120,12 @@ while =
             then do {
                 program;
                 symbol "}";
-                ROP.repeatWhileString w;
+                CR.repeatWhileString w;
                 while;
             }
         else
             do {
-                ROP.program;
+                CR.program;
                 symbol "}";
                 return "";
             }
