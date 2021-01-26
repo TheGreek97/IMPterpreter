@@ -48,8 +48,7 @@ afactor =
         i <- identifier
         var <- readVariable i
         case var of
-            Left var -> return var
-            --If the var does not contain an integer, fail   
-            Right var -> empty 
-        <|>
+            Left var -> return var --var contains an integer
+            Right var -> empty
+    <|>
     integer

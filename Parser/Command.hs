@@ -4,10 +4,10 @@ import qualified Debug.Trace as DBG
 import Parser.Core
 import Parser.Aexp(aexp)
 import Parser.Bexp(bexp)
-import Parser.EnvironmentManager(updateEnv)
+import Parser.Array
+import Parser.EnvironmentManager
 import Environment(Variable(..))
 import qualified Parser.ReadOnlyParser.CommandROP as CR
-import qualified Parser.ReadOnlyParser.ArrayROP as AR
 
 program :: Parser String
 program = 
@@ -29,15 +29,16 @@ command =
 
 assignment :: Parser String
 assignment = 
+    --Aexp
     do 
         varName <- identifier
         symbol "="
-        do
-            aval <- aexp
-            --DBG.traceM(show aval)
-            symbol ";"
-            updateEnv Variable {name=varName, vtype="int", value = Left aval}
+        aval <- aexp
+        --DBG.traceM(show aval)
+        symbol ";"
+        updateEnv Variable {name=varName, vtype=t_int, value = Left aval}
     <|>
+    --Bexp
     do
         varName <- identifier
         symbol "="
@@ -45,25 +46,106 @@ assignment =
        -- DBG.traceM(show bval)
         symbol ";"
         if bval
-        then updateEnv Variable {name=varName, vtype="bool", value = Left 0}
-        else updateEnv Variable {name=varName, vtype="bool", value = Left 1}
+        then updateEnv Variable {name=varName, vtype=t_bool, value = Left 0}
+        else updateEnv Variable {name=varName, vtype=t_bool, value = Left 1}
     <|>
+    -- String
     do
         varName <- identifier
         symbol "="
         stringVal <- stringExp
         --DBG.traceM(show stringVal)
         symbol ";" 
-        updateEnv Variable {name=varName, vtype="string", value = Right stringVal}
+        updateEnv Variable {name=varName, vtype=t_string, value = Right stringVal}
     <|>
+    --Int Array
     do
         varName <- identifier
         symbol "="
-        arrayString <- AR.arrayExp
-        --DBG.traceM(show arrayVal)
+        arrayVal <- aexpArray
         symbol ";" 
-        updateEnv Variable {name=varName, vtype="array", value = Right arrayString}
-
+        updateEnv Variable {name=varName, vtype=t_arr_int , value = Right (show arrayVal)}
+    <|>
+    do
+        arrayName <- identifier
+        symbol "["
+        index <- nat
+        symbol "]"
+        symbol "="
+        newValue <- aexp
+        symbol ";" 
+        updateArray arrayName index (show newValue)
+    <|>
+    --Int Matrices / Arrays of Arrays
+    do
+        varName <- identifier
+        symbol "="
+        arrayVal <- aexpMatrix
+        symbol ";" 
+        updateEnv Variable {name=varName, vtype=t_arr_arr_int , value = Right (show arrayVal)}
+    <|>
+    do
+        arrayName <- identifier
+        symbol "["
+        index <- nat
+        symbol "]"
+        symbol "="
+        newValue <- aexpArray
+        symbol ";" 
+        updateArray arrayName index (show newValue)
+    <|>
+    do
+        matrixName <- identifier
+        symbol "["
+        indexR <- nat
+        symbol "]"
+        symbol "["
+        indexC <- nat
+        symbol "]"
+        symbol "="
+        newValue <- aexp
+        symbol ";" 
+        updateMatrixEntry matrixName indexR indexC (show newValue)
+    <|>
+    --Bool Array
+    do
+        varName <- identifier
+        symbol "="
+        arrayVal <- bexpArray
+        symbol ";" 
+        updateEnv Variable {name=varName, vtype=t_arr_bool , value = Right (show arrayVal)}
+    <|>
+    do
+        arrayName <- identifier
+        symbol "["
+        index <- nat
+        symbol "]"
+        symbol "="
+        newValue <- bexp
+        symbol ";" 
+        updateArray arrayName index (show newValue)
+    <|>
+    --Bool Matrices / Arrays of Arrays
+    
+    --String Array
+    do
+        varName <- identifier
+        symbol "="
+        arrayVal <- parseArrString
+        symbol ";" 
+        updateEnv Variable {name=varName, vtype=t_arr_string, value = Right (show arrayVal)}
+    <|>
+    do
+        arrayName <- identifier
+        symbol "["
+        index <- nat
+        symbol "]"
+        symbol "="
+        newValue <- stringExp
+        symbol ";" 
+        updateArray arrayName index newValue    
+    --String Matrices
+    
 skip :: Parser String
 skip = 
     do
