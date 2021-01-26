@@ -7,7 +7,13 @@ data Variable = Variable {
     name :: String,
     vtype :: String,
     value :: Either Int String 
-} deriving Show
+} deriving Eq
+
+instance Show Variable where
+    show var = (name var) ++  " = " ++ varValue ++ " (" ++ (vtype var) ++ ")\n"
+            where varValue = case (value var) of
+                    Left val  -> show val
+                    Right val -> val
 
 type Env = [Variable]
 

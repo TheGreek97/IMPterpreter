@@ -78,6 +78,18 @@ updateMatrixEntry matName rowIndex colIndex newElement =
                             newMatrix = replaceInArray ( read value :: [[Int]]) rowIndex newRow
                         in (modifyEnv env Variable{ name = matName, vtype = matType, value = Right $ show newMatrix}), "", input
                         )
+                "[[bool]]" -> 
+                    Just (
+                        let newRow = replaceInArray ((read value :: [[Bool]])!!rowIndex) colIndex (read newElement :: Bool)
+                            newMatrix = replaceInArray ( read value :: [[Bool]]) rowIndex newRow
+                        in (modifyEnv env Variable{ name = matName, vtype = matType, value = Right $ show newMatrix}), "", input
+                        )
+                "[[string]]" -> 
+                    Just (
+                        let newRow = replaceInArray ((read value :: [[String]])!!rowIndex) colIndex (read newElement :: String)
+                            newMatrix = replaceInArray ( read value :: [[String]]) rowIndex newRow
+                        in (modifyEnv env Variable{ name = matName, vtype = matType, value = Right $ show newMatrix}), "", input
+                        )
                 otherwise -> Nothing
     )
 

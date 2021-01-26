@@ -76,7 +76,7 @@ assignment =
         symbol ";" 
         updateArray arrayName index (show newValue)
     <|>
-    --Int Matrices / Arrays of Arrays
+    --Int Matrices / Array of Arrays
     do
         varName <- identifier
         symbol "="
@@ -125,13 +125,42 @@ assignment =
         symbol ";" 
         updateArray arrayName index (show newValue)
     <|>
-    --Bool Matrices / Arrays of Arrays
-    
+    --Bool Matrices / Array of Arrays
+    do
+        varName <- identifier
+        symbol "="
+        arrayVal <- bexpMatrix
+        symbol ";" 
+        updateEnv Variable {name=varName, vtype=t_arr_arr_bool , value = Right (show arrayVal)}
+    <|>
+    do
+        arrayName <- identifier
+        symbol "["
+        index <- nat
+        symbol "]"
+        symbol "="
+        newValue <- bexpArray
+        symbol ";" 
+        updateArray arrayName index (show newValue)
+    <|>
+    do
+        matrixName <- identifier
+        symbol "["
+        indexR <- nat
+        symbol "]"
+        symbol "["
+        indexC <- nat
+        symbol "]"
+        symbol "="
+        newValue <- bexp
+        symbol ";" 
+        updateMatrixEntry matrixName indexR indexC (show newValue)
+    <|>
     --String Array
     do
         varName <- identifier
         symbol "="
-        arrayVal <- parseArrString
+        arrayVal <- stringExpArray
         symbol ";" 
         updateEnv Variable {name=varName, vtype=t_arr_string, value = Right (show arrayVal)}
     <|>
@@ -143,9 +172,39 @@ assignment =
         symbol "="
         newValue <- stringExp
         symbol ";" 
-        updateArray arrayName index newValue    
-    --String Matrices
-    
+        updateArray arrayName index newValue  
+    <|>  
+    --String Matrices / Array of Arrays
+    do
+        varName <- identifier
+        symbol "="
+        arrayVal <- stringExpMatrix
+        symbol ";" 
+        updateEnv Variable {name=varName, vtype=t_arr_arr_string , value = Right (show arrayVal)}
+    <|>
+    do
+        arrayName <- identifier
+        symbol "["
+        index <- nat
+        symbol "]"
+        symbol "="
+        newValue <- stringExpArray
+        symbol ";" 
+        updateArray arrayName index (show newValue)
+    <|>
+    do
+        matrixName <- identifier
+        symbol "["
+        indexR <- nat
+        symbol "]"
+        symbol "["
+        indexC <- nat
+        symbol "]"
+        symbol "="
+        newValue <- stringExp
+        symbol ";" 
+        updateMatrixEntry matrixName indexR indexC newValue
+
 skip :: Parser String
 skip = 
     do
