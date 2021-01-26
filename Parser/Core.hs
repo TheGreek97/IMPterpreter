@@ -133,3 +133,18 @@ stringExp =
         stringVal <- many (sat notTerminator)
         symbol "'"
         return stringVal
+
+--Definition of aliases for types
+t_int     = "int"
+t_bool    = "bool"
+t_string  = "string"
+
+t_arr_int     = "["++t_int++"]"
+t_arr_bool    = "["++t_bool++"]"
+t_arr_string  = "["++t_string++"]"
+
+t_arr_arr_int     = "["++t_arr_int++"]"
+t_arr_arr_bool    = "["++t_arr_bool++"]"
+t_arr_arr_string  = "["++t_arr_string++"]"
+
+

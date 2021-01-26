@@ -18,7 +18,7 @@ bexp =
     <|>
     bcompare
     <|>
-    do bterm
+    bterm
 
 bterm :: Parser Bool
 bterm = 
