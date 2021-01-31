@@ -3,20 +3,15 @@ import Control.Applicative
 import Parser.Core
 import Parser.ReadOnlyParser.AexpROP(aexp)
 import Parser.ReadOnlyParser.BexpROP(bexp)
+import qualified Debug.Trace as DBG
 
 program :: Parser String
 program = 
     do
         x <- command
-        symbol ";"
         y <- program
-        return (x ++ ";" ++ y)
+        return (x ++ y)
     <|> 
-    do 
-        x <- command
-        symbol ";"
-        return (x ++ ";")
-    <|>
     command
 
 command :: Parser String
@@ -27,7 +22,9 @@ command =
     <|>
     while
     <|>
-    symbol "skip"
+    do
+        symbol "skip"
+        symbol ";"
 
 assignment :: Parser String
 assignment = 
@@ -37,7 +34,35 @@ assignment =
         val <- P(\env input ->
             let took = takeWhile (/=';') input
             in Just (env, took, drop (length took) input))
-        return (var ++ "=" ++ val)
+        symbol ";"
+        return (var ++ "=" ++ val ++ ";")
+    <|>
+    do
+        var <- identifier
+        symbol "["
+        i <- aexp
+        symbol "]"
+        symbol "="
+        val <- P(\env input ->
+            let took = takeWhile (/=';') input
+            in Just (env, took, drop (length took) input))
+        symbol ";"
+        return (var ++ "["++i++"]=" ++ val ++ ";")
+    <|>
+    do
+        var <- identifier
+        symbol "["
+        ir <- aexp
+        symbol "]"
+        symbol "["
+        ic <- aexp
+        symbol "]"
+        symbol "="
+        val <- P(\env input ->
+            let took = takeWhile (/=';') input
+            in Just (env, took, drop (length took) input))
+        symbol ";"
+        return (var ++ "["++(show ir)++"]"++"["++(show ic)++"]=" ++ val ++ ";")
 
 ifThenElse :: Parser String
 ifThenElse = 
@@ -54,9 +79,9 @@ ifThenElse =
             symbol "{"
             elseBody <- program
             symbol "}"
-            return ("if " ++ b ++ " {" ++ ifBody ++ "}" ++ " else {" ++ elseBody ++ "}")
+            return ("if (" ++ b ++ ") {" ++ ifBody ++ "}" ++ " else {" ++ elseBody ++ "}")
         <|>
-        return ("if " ++ b ++ " {" ++ ifBody ++ "}");
+        return ("if (" ++ b ++ ") {" ++ ifBody ++ "}");
     }
 
 while :: Parser String
@@ -69,6 +94,7 @@ while =
         symbol "{";
         x <- program;
         symbol "}";
+        --DBG.traceM("while (" ++ b ++ ") {" ++ x ++ "}");
         return ("while (" ++ b ++ ") {" ++ x ++ "}");
     }
 

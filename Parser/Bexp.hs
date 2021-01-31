@@ -49,6 +49,37 @@ bterm =
         case var of
             Left var -> return (var == 0) -- If the integer value is != 0 it is consider as False
             Right var -> empty
+    <|>
+    do
+        i <- identifier
+        symbol "["
+        index <- aexp
+        symbol "]"
+        (var, vtype) <- readFullVariable i
+        if vtype == t_arr_bool
+            then
+            case var of
+                Left var -> empty
+                Right var -> return $ (read var :: [Bool]) !! index
+            else
+                empty
+    <|>
+    do
+        i <- identifier
+        symbol "["
+        rIndex <- aexp
+        symbol "]"
+        symbol "["
+        cIndex <- aexp
+        symbol "]"
+        (var, vtype) <- readFullVariable i
+        if vtype == t_arr_arr_bool
+            then
+            case var of
+                Left var -> empty
+                Right var -> return $ ((read var :: [[Bool]]) !! rIndex) !! cIndex
+            else
+                empty 
 
 bcompare :: Parser Bool
 bcompare =

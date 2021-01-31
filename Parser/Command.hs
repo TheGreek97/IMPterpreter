@@ -27,6 +27,12 @@ command =
     <|>
     while
 
+skip :: Parser String
+skip = 
+    do
+        symbol "skip"
+        symbol ";"
+
 assignment :: Parser String
 assignment = 
     --Aexp
@@ -34,7 +40,6 @@ assignment =
         varName <- identifier
         symbol "="
         aval <- aexp
-        --DBG.traceM(show aval)
         symbol ";"
         updateEnv Variable {name=varName, vtype=t_int, value = Left aval}
     <|>
@@ -43,7 +48,6 @@ assignment =
         varName <- identifier
         symbol "="
         bval <- bexp
-       -- DBG.traceM(show bval)
         symbol ";"
         if bval
         then updateEnv Variable {name=varName, vtype=t_bool, value = Left 0}
@@ -54,7 +58,6 @@ assignment =
         varName <- identifier
         symbol "="
         stringVal <- stringExp
-        --DBG.traceM(show stringVal)
         symbol ";" 
         updateEnv Variable {name=varName, vtype=t_string, value = Right stringVal}
     <|>
@@ -69,7 +72,7 @@ assignment =
     do
         arrayName <- identifier
         symbol "["
-        index <- nat
+        index <- aexp
         symbol "]"
         symbol "="
         newValue <- aexp
@@ -87,20 +90,21 @@ assignment =
     do
         arrayName <- identifier
         symbol "["
-        index <- nat
+        index <- aexp
         symbol "]"
         symbol "="
         newValue <- aexpArray
         symbol ";" 
+        --DBG.traceM (show index)
         updateArray arrayName index (show newValue)
     <|>
     do
         matrixName <- identifier
         symbol "["
-        indexR <- nat
+        indexR <- aexp
         symbol "]"
         symbol "["
-        indexC <- nat
+        indexC <- aexp
         symbol "]"
         symbol "="
         newValue <- aexp
@@ -118,7 +122,7 @@ assignment =
     do
         arrayName <- identifier
         symbol "["
-        index <- nat
+        index <- aexp
         symbol "]"
         symbol "="
         newValue <- bexp
@@ -136,7 +140,7 @@ assignment =
     do
         arrayName <- identifier
         symbol "["
-        index <- nat
+        index <- aexp
         symbol "]"
         symbol "="
         newValue <- bexpArray
@@ -146,10 +150,10 @@ assignment =
     do
         matrixName <- identifier
         symbol "["
-        indexR <- nat
+        indexR <- aexp
         symbol "]"
         symbol "["
-        indexC <- nat
+        indexC <- aexp
         symbol "]"
         symbol "="
         newValue <- bexp
@@ -167,7 +171,7 @@ assignment =
     do
         arrayName <- identifier
         symbol "["
-        index <- nat
+        index <- aexp
         symbol "]"
         symbol "="
         newValue <- stringExp
@@ -185,7 +189,7 @@ assignment =
     do
         arrayName <- identifier
         symbol "["
-        index <- nat
+        index <- aexp
         symbol "]"
         symbol "="
         newValue <- stringExpArray
@@ -195,21 +199,15 @@ assignment =
     do
         matrixName <- identifier
         symbol "["
-        indexR <- nat
+        indexR <- aexp
         symbol "]"
         symbol "["
-        indexC <- nat
+        indexC <- aexp
         symbol "]"
         symbol "="
         newValue <- stringExp
         symbol ";" 
         updateMatrixEntry matrixName indexR indexC newValue
-
-skip :: Parser String
-skip = 
-    do
-        symbol "skip"
-        symbol ";"
 
 ifThenElse :: Parser String
 ifThenElse =

@@ -1,7 +1,7 @@
 module Parser.Aexp where
 import Control.Applicative
 import Parser.Core
-import Parser.EnvironmentManager (readVariable)
+import Parser.EnvironmentManager (readVariable, readFullVariable)
 
 aexp :: Parser Int
 aexp = 
@@ -51,4 +51,35 @@ afactor =
             Left var -> return var --var contains an integer
             Right var -> empty
     <|>
+    do
+        i <- identifier
+        symbol "["
+        index <- aexp
+        symbol "]"
+        (var, vtype) <- readFullVariable i
+        if vtype == t_arr_int
+            then
+            case var of
+                Left var -> empty
+                Right var -> return $ (read var :: [Int]) !! index
+            else
+                empty
+    <|>
+    do
+        i <- identifier
+        symbol "["
+        rIndex <- aexp
+        symbol "]"
+        symbol "["
+        cIndex <- aexp
+        symbol "]"
+        (var, vtype) <- readFullVariable i
+        if vtype == t_arr_arr_int
+            then
+            case var of
+                Left var -> empty
+                Right var -> return $ ((read var :: [[Int]]) !! rIndex) !! cIndex
+            else
+                empty
+    <|> 
     integer

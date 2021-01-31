@@ -41,7 +41,6 @@ instance Alternative Parser where
         Just (env, v, out) -> Just (env, v, out))
 
 --Fundamental Types
-
 item :: Parser Char
 item = P (\env input -> case input of 
     [] -> Nothing
@@ -61,22 +60,19 @@ lower = sat isLower
 upper :: Parser Char
 upper = sat isUpper
 
-letter :: Parser Char
-letter = sat isAlpha
-
 alphanum :: Parser Char
 alphanum = sat isAlphaNum
 
 char :: Char -> Parser Char
 char x = sat (== x)
- 
-string :: String -> Parser String
-string [] = return []
-string (x:xs) = 
+
+manychar :: String -> Parser String
+manychar [] = return []
+manychar (x:xs) = 
     do
-        char x
-        string xs
-        return (x:xs)
+        char x;
+        manychar xs;
+        return (x:xs);
 
 identifier :: Parser String
 identifier = 
@@ -113,21 +109,18 @@ token p =
         v <- p
         space
         return v
-
-natural :: Parser Int
-natural = token nat
-
+        
 integer :: Parser Int
 integer = token int
 
 symbol :: String -> Parser String
-symbol xs = token (string xs)
+symbol xs = token (manychar xs)
 
 notTerminator :: Char -> Bool
 notTerminator c = c /= '\''
 
-stringExp :: Parser String
-stringExp = 
+string :: Parser String
+string = 
     do
         symbol "'"
         stringVal <- many (sat notTerminator)
@@ -146,5 +139,3 @@ t_arr_string  = "["++t_string++"]"
 t_arr_arr_int     = "["++t_arr_int++"]"
 t_arr_arr_bool    = "["++t_arr_bool++"]"
 t_arr_arr_string  = "["++t_arr_string++"]"
-
-
