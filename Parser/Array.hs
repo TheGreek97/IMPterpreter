@@ -34,13 +34,13 @@ aexpArray =
     do
         a1 <- arrayInt
         symbol "+"
-        a2 <- arrayInt 
+        a2 <- aexpArray 
         return $ zipWith (+) a1 a2
     <|>
     do
         a1 <- arrayInt
         symbol "-"
-        a2 <- arrayInt 
+        a2 <- aexpArray 
         return $ zipWith (-) a1 a2
     <|>
     do
@@ -68,7 +68,7 @@ aexpArray =
     do
         a1 <- arrayInt
         symbol "++"
-        a2 <- arrayInt 
+        a2 <- aexpArray 
         return $ a1 ++ a2
     <|>
     arrayInt
@@ -156,41 +156,41 @@ aexpMatrix =
     do
         a1 <- matrixInt
         symbol "+"
-        a2 <- matrixInt
+        a2 <- aexpMatrix
         return $ zipWith (zipWith (+)) a1 a2
     <|>
     -- Matrix Subtraction
     do
         a1 <- matrixInt
         symbol "-"
-        a2 <- matrixInt
+        a2 <- aexpMatrix
         return $ zipWith (zipWith (-)) a1 a2
     <|>
     -- Matrix Multiplication
     do
         a1 <- matrixInt
         symbol "@"
-        a2 <- matrixInt
+        a2 <- aexpMatrix
         return $ matMult a1 a2
     <|>
     --Matrix Horizontal Concatenation
     do
         a1 <- matrixInt
         symbol "++"
-        a2 <- matrixInt
+        a2 <- aexpMatrix
         return $ zipWith (++) a1 a2
     <|>
     --Matrix Vertical Concatenation
     do
         a1 <- matrixInt
         symbol "#"
-        a2 <- matrixInt
+        a2 <- aexpMatrix
         return $ a1 ++ a2
     <|>
     matrixInt
 
 matrixInt :: Parser [[Int]]
-matrixInt = 
+matrixInt =
     do 
         symbol "("
         a <- aexpMatrix
@@ -240,21 +240,21 @@ bexpArray =
     do
         a1 <- arrayBool
         symbol "&&"
-        a2 <- arrayBool
+        a2 <- bexpArray
         return $ zipWith (&&) a1 a2
     <|>
     -- Term-by-term Disjunction
     do
         a1 <- arrayBool
         symbol "||"
-        a2 <- arrayBool
+        a2 <- bexpArray
         return $ zipWith (||) a1 a2
     <|>
     -- Concatenation
     do
         a1 <- arrayBool
         symbol "++"
-        a2 <- arrayBool
+        a2 <- bexpArray
         return $ a1 ++ a2
     <|>
     arrayBterm
@@ -287,6 +287,17 @@ arrayBool =
         symbol "["
         symbol "]"
         return []
+    <|>
+    do
+        i <- identifier
+        (var, vtype) <- readFullVariable i
+        if vtype == t_arr_bool
+            then
+            case var of
+                Left var -> empty
+                Right var -> return (read var :: [Bool])
+            else
+                empty
 
 arrayBoolEntries :: Parser [Bool]
 arrayBoolEntries =
@@ -299,17 +310,6 @@ arrayBoolEntries =
         <|>
         return [bool];
     }
-    <|>
-    do
-        i <- identifier
-        (var, vtype) <- readFullVariable i
-        if vtype == t_arr_bool
-            then
-            case var of
-                Left var -> empty
-                Right var -> return (read var :: [Bool])
-            else
-                empty
     <|>
     do
         i <- identifier
@@ -330,37 +330,36 @@ bexpMatrix :: Parser [[Bool]]
 bexpMatrix =
     -- Negation
     do
-        a <- matrixBool
         symbol "!"
-        t <- bexp
+        a <- bexpMatrix
         return (fmap (fmap not) a)
     <|>
     -- Matrix Conjunction
     do
         a1 <- matrixBool
         symbol "&&"
-        a2 <- matrixBool
+        a2 <- bexpMatrix
         return $ zipWith (zipWith (&&)) a1 a2
     <|>
     -- Matrix Disjunction
     do
         a1 <- matrixBool
         symbol "||"
-        a2 <- matrixBool
+        a2 <- bexpMatrix
         return $ zipWith (zipWith (||)) a1 a2
     <|>
     --Matrix Horizontal Concatenation
     do
         a1 <- matrixBool
         symbol "++"
-        a2 <- matrixBool
+        a2 <- bexpMatrix
         return $ zipWith (++) a1 a2
     <|>
     --Matrix Vertical Concatenation
     do
         a1 <- matrixBool
         symbol "#"
-        a2 <- matrixBool
+        a2 <- bexpMatrix
         return $ a1 ++ a2
     <|>
     matrixBool
@@ -379,6 +378,17 @@ matrixBool =
         symbol "]"
         symbol "]"
         return [[]]
+    <|>
+    do
+        i <- identifier
+        (var, vtype) <- readFullVariable i
+        if vtype == t_arr_arr_bool
+            then
+            case var of
+                Left var -> empty
+                Right var -> return (read var :: [[Bool]])
+            else
+                empty
 
 matrixBoolEntries :: Parser [[Bool]]
 matrixBoolEntries =
@@ -391,17 +401,6 @@ matrixBoolEntries =
         <|>
         return [v1];
     }
-    <|>
-    do
-        i <- identifier
-        (var, vtype) <- readFullVariable i
-        if vtype == t_arr_arr_bool
-            then
-            case var of
-                Left var -> empty
-                Right var -> return (read var :: [[Bool]])
-            else
-                empty
 
 --Strings
 stringExp :: Parser String
@@ -467,7 +466,7 @@ stringExpArray =
     do
         a1 <- arrayString
         symbol "++"
-        a2 <- arrayString
+        a2 <- stringExpArray
         return $ a1 ++ a2
     <|>
     arrayString
@@ -483,20 +482,7 @@ arrayString =
     do 
         symbol "["
         symbol "]"
-        return []
-
-
-arrayStringEntries :: Parser [String]
-arrayStringEntries =
-    do  {
-        stringVal <- stringExp;
-        do 
-            symbol ","
-            a <- arrayStringEntries
-            return ([stringVal] ++ a)
-        <|>
-        return [stringVal];
-    }   
+        return []  
     <|>
     do
         i <- identifier
@@ -523,20 +509,33 @@ arrayStringEntries =
             else
                 empty 
 
+
+arrayStringEntries :: Parser [String]
+arrayStringEntries =
+    do  {
+        stringVal <- stringExp;
+        do 
+            symbol ","
+            a <- arrayStringEntries
+            return ([stringVal] ++ a)
+        <|>
+        return [stringVal];
+    }
+
 stringExpMatrix :: Parser [[String]]
 stringExpMatrix =
     --Matrix Horizontal Concatenation
     do
         a1 <- matrixString
         symbol "++"
-        a2 <- matrixString
+        a2 <- stringExpMatrix
         return $ zipWith (++) a1 a2
     <|>
     --Matrix Vertical Concatenation
     do
         a1 <- matrixString
         symbol "#"
-        a2 <- matrixString
+        a2 <- stringExpMatrix
         return $ a1 ++ a2
     <|>
     matrixString
@@ -555,6 +554,17 @@ matrixString =
         symbol "]"
         symbol "]"
         return [[]]
+    <|>
+    do
+        i <- identifier
+        (var, vtype) <- readFullVariable i
+        if vtype == t_arr_arr_string
+            then
+            case var of
+                Left var -> empty
+                Right var -> return (read var :: [[String]])
+            else
+                empty
     
 matrixStringEntries :: Parser [[String]]
 matrixStringEntries =
@@ -567,17 +577,6 @@ matrixStringEntries =
         <|>
         return [v1];
     }
-    <|>
-    do
-        i <- identifier
-        (var, vtype) <- readFullVariable i
-        if vtype == t_arr_arr_string
-            then
-            case var of
-                Left var -> empty
-                Right var -> return (read var :: [[String]])
-            else
-                empty
 
 --Matrix operations
 matTran :: [[Int]] -> [[Int]]
@@ -586,7 +585,6 @@ matTran m = if length (head m) > 1
     then (map head m) : (matTran (map tail m))
     else [map head m]
     
-
 matMult :: [[Int]] -> [[Int]] -> [[Int]]
 matMult m1 m2 = matMult' m1 (matTran m2)    
 
